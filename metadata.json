@@ -1,0 +1,5 @@
+{
+  "name": "كورس دارك - Course Dark",
+  "description": "منصة تعليمية متكاملة لإدارة الكورسات والفيديوهات، مع ميزات حماية متقدمة وتحكم كامل للمسؤولين.",
+  "requestFramePermissions": ["camera", "microphone", "geolocation"]
+}

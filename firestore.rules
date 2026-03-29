@@ -1,0 +1,87 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    // Collection: users
+    // Document ID: {userId} (UID)
+    // Fields:
+    //   - uid: string (required)
+    //   - username: string (required)
+    //   - displayName: string (optional)
+    //   - role: string (admin, moderator, student)
+    //   - isSubscribed: bool
+    //   - photoURL: string
+    //   - createdAt: timestamp
+    //
+    // Collection: videos
+    // Document ID: {videoId}
+    // Fields:
+    //   - title: string (required)
+    //   - description: string
+    //   - videoURL: string (required)
+    //   - thumbnailURL: string
+    //   - uploadedBy: string (UID)
+    //   - createdAt: timestamp
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin' ||
+         (request.auth.token.email == "sofanjihad114@gmail.com" && request.auth.token.email_verified == true) ||
+         (request.auth.token.email == "admin@coursedark.com"));
+    }
+
+    function isModerator() {
+      return isAuthenticated() && 
+        (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'moderator' || isAdmin());
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isSubscribed() {
+      return isAuthenticated() && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.isSubscribed == true;
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      // السماح بالقراءة العامة فقط للتحقق من وجود مستخدمين (لإعداد المسؤول لأول مرة)
+      allow list: if true; 
+      allow get: if isAuthenticated() && (isOwner(userId) || isModerator());
+      allow create: if isAdmin() || (request.resource.data.role == 'admin' && !exists(/databases/$(database)/documents/users/$(userId)));
+      allow update: if isAuthenticated() && (
+        (isOwner(userId) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['displayName', 'photoURL', 'password', 'username'])) ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Videos Collection
+    match /videos/{videoId} {
+      allow read: if isAuthenticated() && (isSubscribed() || isModerator());
+      allow create, update, delete: if isModerator();
+    }
+
+    // Plans Collection
+    match /plans/{planId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    // Chats Collection
+    match /chats/{chatId} {
+      allow read: if isAuthenticated() && (request.auth.uid == resource.data.senderId || request.auth.uid == resource.data.receiverId || isAdmin());
+      allow create: if isAuthenticated() && request.auth.uid == request.resource.data.senderId;
+      allow update, delete: if isAdmin();
+    }
+  }
+}

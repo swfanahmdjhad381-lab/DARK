@@ -1,0 +1,76 @@
+{
+  "entities": {
+    "users": {
+      "title": "User Profile",
+      "description": "Stores user information, roles, and subscription status.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "Firebase Auth UID" },
+        "username": { "type": "string", "description": "The unique username for login" },
+        "displayName": { "type": "string", "description": "Arabic name of the user" },
+        "role": { "type": "string", "enum": ["admin", "moderator", "student"], "description": "User role" },
+        "isSubscribed": { "type": "boolean", "description": "Whether the student has an active subscription" },
+        "subscriptionExpiresAt": { "type": "string", "format": "date-time", "description": "Subscription expiration date" },
+        "photoURL": { "type": "string", "description": "Profile picture URL" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "username", "role"]
+    },
+    "videos": {
+      "title": "Course Video",
+      "description": "Stores video metadata and URLs.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Video title" },
+        "description": { "type": "string", "description": "Video description" },
+        "videoURL": { "type": "string", "description": "URL to the video file" },
+        "thumbnailURL": { "type": "string", "description": "URL to the thumbnail" },
+        "uploadedBy": { "type": "string", "description": "UID of the uploader" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "videoURL", "uploadedBy"]
+    },
+    "plans": {
+      "title": "Subscription Plan",
+      "description": "Stores subscription plan details.",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string", "description": "Plan name" },
+        "price": { "type": "string", "description": "Plan price" },
+        "duration": { "type": "string", "description": "Plan duration" },
+        "features": { "type": "array", "items": { "type": "string" }, "description": "List of features" }
+      },
+      "required": ["name", "price", "duration"]
+    },
+    "chats": {
+      "title": "Chat Message",
+      "description": "Stores chat messages between users and admins.",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string", "description": "Message content" },
+        "senderId": { "type": "string", "description": "UID of the sender" },
+        "receiverId": { "type": "string", "description": "UID of the receiver" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["text", "senderId", "receiverId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "users",
+      "description": "User profiles"
+    },
+    "/videos/{videoId}": {
+      "schema": "videos",
+      "description": "Course videos"
+    },
+    "/plans/{planId}": {
+      "schema": "plans",
+      "description": "Subscription plans"
+    },
+    "/chats/{chatId}": {
+      "schema": "chats",
+      "description": "Chat messages"
+    }
+  }
+}
